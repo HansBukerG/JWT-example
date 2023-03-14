@@ -1,0 +1,7 @@
+devDependencies:
+
+npm i nodemon jest --save-dev
+
+dependencies:
+
+npm i express jsonwebtoken
