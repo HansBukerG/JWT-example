@@ -1,10 +1,11 @@
 import express from "express";
 import jwt from "jsonwebtoken";
+import { promisify } from "util";
 
 const app = express();
 const secretKey = 'Gatitos  bonitos'
 
-app.get("/api", (req,res) => {
+app.get("/api", async (req,res) => {
     res.json(
         {
             message: "NodeJS and JWT"
@@ -12,34 +13,31 @@ app.get("/api", (req,res) => {
     )
 })
 
-app.post("/api/login", (req,res) => {
-
+app.post("/api/login", async (req,res) => {
     const user = {
         id:1,  
         user: "Hans",
         pwd: "12345",
         email: "hans@gmail.com"
     }
-
-    jwt.sign({user: user} ,secretKey, {expiresIn: '20s'}, (err,token) => {
-        res.json({
-            token: token, 
-        })
-    })   
+    try {
+        const token = await promisify(jwt.sign)({user: user}, secretKey, {expiresIn: '20s'});
+        res.json({token: token});
+    } catch (error) {
+        res.sendStatus(500);
+    }
 })
 
-app.post("/api/posts", verifyToken,(req,res) => {
-    jwt.verify(req.token, secretKey, (error, authData) => {
-        if (error) {
-            res.sendStatus(403)
-        }else{
-            res.json({
-                message: 'post was created',
-                authData: authData
-            })
-        }
-    })
-    
+app.post("/api/posts", verifyToken, async (req,res) => {
+    try {
+        const authData = await promisify(jwt.verify)(req.token, secretKey);
+        res.json({
+            message: 'post was created',
+            authData: authData
+        });
+    } catch (error) {
+        res.sendStatus(403);
+    }
 })
 
 // Authorization: Bearer <token>
